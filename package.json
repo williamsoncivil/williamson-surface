@@ -1,0 +1,30 @@
+{
+  "name": "williamson-surface",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "concurrently \"vite\" \"wait-on http://localhost:3000 && electron .\"",
+    "dev": "NODE_ENV=development electron .",
+    "vite": "vite",
+    "build": "vite build && electron-builder"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "d3-delaunay": "^6.0.4",
+    "electron": "^40.6.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "three": "^0.183.2"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.0.3",
+    "@vitejs/plugin-react": "^5.1.4",
+    "concurrently": "^9.2.1",
+    "electron-builder": "^26.8.1",
+    "vite": "^7.3.1",
+    "wait-on": "^9.0.4"
+  }
+}
