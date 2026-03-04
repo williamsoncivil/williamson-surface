@@ -5,6 +5,7 @@ import Canvas2D from './Canvas2D.jsx';
 import View3D from './View3D.jsx';
 import RightSidebar from './RightSidebar.jsx';
 import StatusBar from './StatusBar.jsx';
+import CogoPanel from './CogoPanel.jsx';
 import { parseCSV, pointsToCSV } from '../utils/csvParser.js';
 import { buildTIN, analyzeTriangles, getSurfaceStats } from '../utils/tinBuilder.js';
 import { exportDXF, exportTTM, exportLandXML } from '../utils/exporters.js';
@@ -156,6 +157,15 @@ export default function App() {
           )}
         </div>
         <RightSidebar selected={selected} stats={stats} problems={project.problems} />
+        <CogoPanel
+          points={project.points}
+          lines={project.breaklines}
+          onAddPoint={(pt) => setProject(p => ({ ...p, points: [...p.points, pt], surface: null }))}
+          onAddLine={(line) => setProject(p => ({ ...p, breaklines: [...p.breaklines, line] }))}
+          onDeletePoint={(id) => setProject(p => ({ ...p, points: p.points.filter(pt => pt.id !== id), surface: null }))}
+          onDeleteLine={(idx) => setProject(p => ({ ...p, breaklines: p.breaklines.filter((_, i) => i !== idx) }))}
+          onReplacePoints={(pts) => setProject(p => ({ ...p, points: pts, surface: null }))}
+        />
       </div>
       <StatusBar
         mouseCoords={mouseCoords}
