@@ -1,7 +1,8 @@
 import React from 'react';
 
-export default function RightSidebar({ selected, stats, problems }) {
-  const pt = selected;
+export default function RightSidebar({ selected, stats, problems, onDeleteLine }) {
+  const pt = selected && selected.id ? selected : null;
+  const line = selected && selected.index !== undefined ? selected : null;
   return (
     <div style={{ width: 200, background: '#16213e', borderLeft: '1px solid #0f3460', padding: 12, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div>
@@ -37,6 +38,17 @@ export default function RightSidebar({ selected, stats, problems }) {
         </div>
       )}
 
+      {line && (
+        <div>
+          <div style={{ fontSize: 11, color: '#ff9f43', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>〰 Selected Line</div>
+          <StatRow label="Name" value={line.line?.name || `Line ${line.index}`} />
+          <StatRow label="Points" value={(line.line?.pts || line.line || []).length} />
+          <button
+            onClick={() => onDeleteLine && onDeleteLine(line.index)}
+            style={{ marginTop: 10, background: '#c0392b', border: 'none', color: '#fff', padding: '7px 10px', borderRadius: 5, cursor: 'pointer', fontSize: 12, width: '100%', fontWeight: 600 }}
+          >🗑 Delete Line</button>
+        </div>
+      )}
       {pt && (
         <div>
           <div style={{ fontSize: 11, color: '#ffd700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>📍 Selected Point</div>

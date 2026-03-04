@@ -56,7 +56,8 @@ export default function CogoPanel({ points, lines, clickedPoint, onAddPoint, onA
   }, [clickedPoint]);
   const [traverseState, setTraverseState] = useState({
     startId: '', dirId: '', turnAngle: '', distance: '', elevMode: 'same', elevValue: '',
-    chain: [], // array of placed points in this traverse session
+    drawLine: false, lineName: '',
+    chain: [],
     refBearing: null,
     lastPt: null,
   });
@@ -79,6 +80,7 @@ export default function CogoPanel({ points, lines, clickedPoint, onAddPoint, onA
       description: 'COGO',
     };
     if (isNaN(pt.easting) || isNaN(pt.northing)) return alert('Enter valid Easting and Northing');
+    if (points.find(p => p.id === pt.id)) return alert(`Point ID "${pt.id}" already exists. Choose a different ID.`);
     onAddPoint(pt);
     setCreateState({ id: '', easting: '', northing: '', elevation: '' });
   };
@@ -120,11 +122,14 @@ export default function CogoPanel({ points, lines, clickedPoint, onAddPoint, onA
 
     const newPtData = pointAtAngleDistance(lastPt, refBearing, turn, dist, elevOption);
     const newId = nextPointId([...points, ...chain.slice(1)]);
+    // Check for duplicate ID
+    if (points.find(p => p.id === newId)) return alert(`Point ID ${newId} already exists`);
     const newPt = { id: newId, easting: newPtData.easting, northing: newPtData.northing, elevation: newPtData.elevation, description: 'TRAV' };
 
     onAddPoint(newPt);
-    if (chain.length >= 1) {
-      onAddLine([lastPt, newPt]);
+    if (traverseState.drawLine && chain.length >= 1) {
+      const lineName = traverseState.lineName || `Line-${chain.length}`;
+      onAddLine([lastPt, newPt], lineName);
     }
 
     setTraverseState(s => ({
@@ -289,6 +294,17 @@ export default function CogoPanel({ points, lines, clickedPoint, onAddPoint, onA
                 {traverseState.elevMode !== 'same' && (
                   <input style={input({ marginTop: 4 })} value={traverseState.elevValue} onChange={e => setTraverseState(s => ({ ...s, elevValue: e.target.value }))}
                     placeholder={traverseState.elevMode === 'slope' ? '% grade e.g. -2' : traverseState.elevMode === 'manual' ? 'elevation' : '± ft'} type="number" />
+                )}
+                {/* Draw line option */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                  <input type="checkbox" id="drawLine" checked={traverseState.drawLine} onChange={e => setTraverseState(s => ({ ...s, drawLine: e.target.checked }))} />
+                  <label htmlFor="drawLine" style={{ fontSize: 12, color: '#aaa', cursor: 'pointer' }}>Draw line to new point</label>
+                </div>
+                {traverseState.drawLine && (
+                  <>
+                    <span style={label}>Line Name</span>
+                    <input style={input()} value={traverseState.lineName} onChange={e => setTraverseState(s => ({ ...s, lineName: e.target.value }))} placeholder="e.g. Road CL" />
+                  </>
                 )}
                 <button style={btn()} onClick={handleTraverseAdd}>Place Point →</button>
                 <button style={btn('#0f3460')} onClick={handleClosureCheck}>Check Closure</button>

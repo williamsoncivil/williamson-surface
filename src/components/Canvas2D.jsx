@@ -1,6 +1,14 @@
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { triangleElevation, triangleSlope, getSurfaceStats } from '../utils/tinBuilder.js';
 
+function pointToSegmentDist(px, py, ax, ay, bx, by) {
+  const dx = bx - ax, dy = by - ay;
+  const lenSq = dx * dx + dy * dy;
+  if (lenSq === 0) return Math.hypot(px - ax, py - ay);
+  const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / lenSq));
+  return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+}
+
 function elevationColor(elev, minE, maxE) {
   if (maxE === minE) return '#4a9eff';
   const t = (elev - minE) / (maxE - minE);
@@ -120,17 +128,29 @@ export default function Canvas2D({ points, breaklines, boundary, surface, proble
       ctx.stroke();
     }
 
-    // Draw breaklines
+    // Draw breaklines (support both old array format and new {pts, name} format)
     if (breaklines && breaklines.length) {
-      ctx.strokeStyle = '#ff9f43';
-      ctx.lineWidth = 1.5;
-      breaklines.forEach(bl => {
+      const selectedLine = stateRef.current.selectedLine;
+      breaklines.forEach((bl, idx) => {
+        const pts = bl.pts || bl;
+        const isSelected = selectedLine === idx;
+        ctx.strokeStyle = isSelected ? '#ffd700' : '#ff9f43';
+        ctx.lineWidth = isSelected ? 3 : 1.5;
         ctx.beginPath();
-        bl.forEach((p, i) => {
+        pts.forEach((p, i) => {
           const [x, y] = toCanvas(p.easting, p.northing);
           i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
         });
         ctx.stroke();
+        // Draw line name label at midpoint
+        const name = bl.name;
+        if (name && pts.length >= 2) {
+          const mid = Math.floor(pts.length / 2);
+          const [mx, my] = toCanvas(pts[mid].easting, pts[mid].northing);
+          ctx.fillStyle = isSelected ? '#ffd700' : '#ff9f43';
+          ctx.font = '10px sans-serif';
+          ctx.fillText(name, mx + 4, my - 4);
+        }
       });
     }
 
@@ -227,11 +247,31 @@ export default function Canvas2D({ points, breaklines, boundary, surface, proble
       }
       if (closest) {
         stateRef.current.selectedPt = closest;
+        stateRef.current.selectedLine = null;
         onSelected({ type: 'select', point: closest });
         draw();
         return;
       }
+      // Check if clicking near a line
+      let closestLine = null, minLineDist = 8;
+      breaklines.forEach((bl, idx) => {
+        const pts = bl.pts || bl;
+        for (let i = 0; i < pts.length - 1; i++) {
+          const [ax, ay] = toCanvas(pts[i].easting, pts[i].northing);
+          const [bx, by] = toCanvas(pts[i+1].easting, pts[i+1].northing);
+          const d = pointToSegmentDist(cx, cy, ax, ay, bx, by);
+          if (d < minLineDist) { minLineDist = d; closestLine = idx; }
+        }
+      });
+      if (closestLine !== null) {
+        stateRef.current.selectedLine = closestLine;
+        stateRef.current.selectedPt = null;
+        onSelected({ type: 'line', index: closestLine, line: breaklines[closestLine] });
+        draw();
+        return;
+      }
       stateRef.current.selectedPt = null;
+      stateRef.current.selectedLine = null;
       onSelected(null);
       s.isPanning = true;
       s.lastMouse = { x: e.clientX, y: e.clientY };

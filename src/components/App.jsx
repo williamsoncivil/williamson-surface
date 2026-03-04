@@ -152,7 +152,7 @@ export default function App() {
               colorMode={colorMode}
               onMouseCoords={setMouseCoords}
               onSelected={handlePointSelect}
-              onBreaklineAdd={(bl) => setProject(p => ({ ...p, breaklines: [...p.breaklines, bl] }))}
+              onBreaklineAdd={(bl) => setProject(p => ({ ...p, breaklines: [...p.breaklines, { pts: bl, name: `Breakline ${p.breaklines.length + 1}` }] }))}
               onBoundarySet={(b) => setProject(p => ({ ...p, boundary: b }))}
             />
           ) : (
@@ -163,13 +163,18 @@ export default function App() {
             />
           )}
         </div>
-        <RightSidebar selected={selected?.point || selected} stats={stats} problems={project.problems} />
+        <RightSidebar
+          selected={selected?.point || selected}
+          stats={stats}
+          problems={project.problems}
+          onDeleteLine={(idx) => { setProject(p => ({ ...p, breaklines: p.breaklines.filter((_, i) => i !== idx) })); setSelected(null); }}
+        />
         <CogoPanel
           points={project.points}
           lines={project.breaklines}
           clickedPoint={clickedPoint}
           onAddPoint={(pt) => setProject(p => ({ ...p, points: [...p.points, pt], surface: null }))}
-          onAddLine={(line) => setProject(p => ({ ...p, breaklines: [...p.breaklines, line] }))}
+          onAddLine={(line, name) => setProject(p => ({ ...p, breaklines: [...p.breaklines, { pts: line, name: name || `Line ${p.breaklines.length + 1}` }] }))}
           onDeletePoint={(id) => setProject(p => ({ ...p, points: p.points.filter(pt => pt.id !== id), surface: null }))}
           onDeleteLine={(idx) => setProject(p => ({ ...p, breaklines: p.breaklines.filter((_, i) => i !== idx) }))}
           onReplacePoints={(pts) => setProject(p => ({ ...p, points: pts, surface: null }))}
