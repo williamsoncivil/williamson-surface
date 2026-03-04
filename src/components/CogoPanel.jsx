@@ -142,6 +142,7 @@ export default function CogoPanel({ points, lines, clickedPoint, onAddPoint, onA
     if (points.find(p => p.id === newId)) return alert(`Point ID ${newId} already exists`);
     const newPt = { id: newId, easting: newPtData.easting, northing: newPtData.northing, elevation: newPtData.elevation, description: 'TRAV' };
 
+    if (onTraversePreview) onTraversePreview(null);
     onAddPoint(newPt);
     if (traverseState.drawLine && chain.length >= 1) {
       const lineName = traverseState.lineName || `Line-${chain.length}`;

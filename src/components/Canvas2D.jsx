@@ -218,7 +218,7 @@ export default function Canvas2D({ points, breaklines, boundary, surface, proble
         ctx.fillText(p.id, x + dotSize * 2 + 2, y - 2);
       }
     });
-  }, [points, surface, breaklines, boundary, problems, showTIN, showLabels, colorMode]);
+  }, [points, surface, breaklines, boundary, problems, showTIN, showLabels, colorMode, traversePreview]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
