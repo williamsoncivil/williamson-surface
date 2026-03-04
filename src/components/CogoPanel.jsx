@@ -30,8 +30,30 @@ const section = { borderBottom: '1px solid #0f3460', paddingBottom: 12, marginBo
 const result = { background: '#0f3460', borderRadius: 6, padding: '8px 10px', fontSize: 12, marginTop: 8 };
 const resultRow = { display: 'flex', justifyContent: 'space-between', padding: '2px 0' };
 
-export default function CogoPanel({ points, lines, onAddPoint, onAddLine, onDeletePoint, onDeleteLine, onReplacePoints }) {
+export default function CogoPanel({ points, lines, clickedPoint, onAddPoint, onAddLine, onDeletePoint, onDeleteLine, onReplacePoints }) {
   const [activeTab, setActiveTab] = useState('create');
+  const [pointInfo, setPointInfo] = useState(null);
+
+  // Auto-fill when a point is clicked on canvas
+  React.useEffect(() => {
+    if (!clickedPoint) return;
+    setPointInfo(clickedPoint);
+    // Auto-fill inverse fields: first empty slot
+    setInverseState(s => {
+      if (!s.p1Id) return { ...s, p1Id: clickedPoint.id, result: null };
+      if (!s.p2Id && s.p1Id !== clickedPoint.id) return { ...s, p2Id: clickedPoint.id, result: null };
+      return { ...s, p1Id: clickedPoint.id, p2Id: '', result: null };
+    });
+    // Auto-fill traverse start if not set
+    setTraverseState(s => {
+      if (s.chain.length > 0) return s; // already running
+      if (!s.startId) return { ...s, startId: clickedPoint.id };
+      if (!s.dirId && s.startId !== clickedPoint.id) return { ...s, dirId: clickedPoint.id };
+      return s;
+    });
+    // Auto-fill edit
+    setEditState({ id: clickedPoint.id, easting: clickedPoint.easting, northing: clickedPoint.northing, elevation: clickedPoint.elevation });
+  }, [clickedPoint]);
   const [traverseState, setTraverseState] = useState({
     startId: '', dirId: '', turnAngle: '', distance: '', elevMode: 'same', elevValue: '',
     chain: [], // array of placed points in this traverse session
@@ -188,6 +210,23 @@ export default function CogoPanel({ points, lines, onAddPoint, onAddLine, onDele
 
   return (
     <div style={{ width: 220, background: '#16213e', borderLeft: '1px solid #0f3460', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      {/* Selected point info */}
+      {pointInfo && (
+        <div style={{ background: '#0a1628', borderBottom: '1px solid #0f3460', padding: '8px 12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: '#ffd700', fontWeight: 700, fontSize: 12 }}>📍 Point {pointInfo.id}</span>
+            <button onClick={() => setPointInfo(null)} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: 14 }}>✕</button>
+          </div>
+          <div style={{ fontSize: 11, color: '#aaa', marginTop: 4, lineHeight: 1.8 }}>
+            <div>E: <span style={{ color: '#e0e0e0' }}>{Number(pointInfo.easting).toFixed(3)}</span></div>
+            <div>N: <span style={{ color: '#e0e0e0' }}>{Number(pointInfo.northing).toFixed(3)}</span></div>
+            <div>Elev: <span style={{ color: '#e0e0e0' }}>{Number(pointInfo.elevation).toFixed(3)}</span></div>
+            {pointInfo.description && <div>Desc: <span style={{ color: '#e0e0e0' }}>{pointInfo.description}</span></div>}
+          </div>
+          <div style={{ fontSize: 10, color: '#555', marginTop: 4 }}>Single click = select · Double click = info</div>
+        </div>
+      )}
+
       {/* Tab bar */}
       <div style={{ display: 'flex', flexWrap: 'wrap', borderBottom: '1px solid #0f3460', gap: 1, padding: 4 }}>
         {tabs.map(t => (

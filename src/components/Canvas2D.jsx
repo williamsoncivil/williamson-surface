@@ -151,18 +151,24 @@ export default function Canvas2D({ points, breaklines, boundary, surface, proble
 
     // Draw points
     const dotSize = Math.max(2, Math.min(6, stateRef.current.zoom * 0.3));
-    ctx.fillStyle = '#e94560';
+    const selectedPt = stateRef.current.selectedPt;
     points.forEach(p => {
       const [x, y] = toCanvas(p.easting, p.northing);
       if (x < -10 || x > W + 10 || y < -10 || y > H + 10) return;
+      const isSelected = selectedPt && selectedPt.id === p.id;
       ctx.beginPath();
-      ctx.arc(x, y, dotSize, 0, Math.PI * 2);
+      ctx.arc(x, y, isSelected ? dotSize * 2 : dotSize, 0, Math.PI * 2);
+      ctx.fillStyle = isSelected ? '#ffd700' : '#e94560';
       ctx.fill();
-      if (showLabels) {
-        ctx.fillStyle = '#fff';
-        ctx.font = '10px sans-serif';
-        ctx.fillText(p.id, x + dotSize + 2, y - 2);
-        ctx.fillStyle = '#e94560';
+      if (isSelected) {
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+      if (showLabels || isSelected) {
+        ctx.fillStyle = isSelected ? '#ffd700' : '#fff';
+        ctx.font = isSelected ? 'bold 12px sans-serif' : '10px sans-serif';
+        ctx.fillText(p.id, x + dotSize * 2 + 2, y - 2);
       }
     });
   }, [points, surface, breaklines, boundary, problems, showTIN, showLabels, colorMode]);
@@ -211,7 +217,28 @@ export default function Canvas2D({ points, breaklines, boundary, surface, proble
       return;
     }
 
-    if (activeTool === 'select' || activeTool === 'delete') {
+    // Single click near a point — select it (highlight), notify parent
+    if (activeTool === 'select') {
+      let closest = null, minD = Infinity;
+      for (const p of points) {
+        const [px, py] = toCanvas(p.easting, p.northing);
+        const d = Math.hypot(px - cx, py - cy);
+        if (d < 16 && d < minD) { minD = d; closest = p; }
+      }
+      if (closest) {
+        stateRef.current.selectedPt = closest;
+        onSelected({ type: 'select', point: closest });
+        draw();
+        return;
+      }
+      stateRef.current.selectedPt = null;
+      onSelected(null);
+      s.isPanning = true;
+      s.lastMouse = { x: e.clientX, y: e.clientY };
+      return;
+    }
+
+    if (activeTool === 'delete') {
       s.isPanning = true;
       s.lastMouse = { x: e.clientX, y: e.clientY };
     }
@@ -257,8 +284,27 @@ export default function Canvas2D({ points, breaklines, boundary, surface, proble
     stateRef.current.lastMouse = null;
   }, []);
 
-  const handleDoubleClick = useCallback(() => {
+  const handleDoubleClick = useCallback((e) => {
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const cx = e.clientX - rect.left;
+    const cy = e.clientY - rect.top;
     const s = stateRef.current;
+
+    // Double click in select mode = show point info
+    if (activeTool === 'select') {
+      let closest = null, minD = Infinity;
+      for (const p of points) {
+        const [px, py] = toCanvas(p.easting, p.northing);
+        const d = Math.hypot(px - cx, py - cy);
+        if (d < 16 && d < minD) { minD = d; closest = p; }
+      }
+      if (closest) {
+        onSelected({ type: 'info', point: closest });
+      }
+      return;
+    }
+
     if (!s.drawingLine || s.drawingLine.length < 2) {
       s.drawingLine = null;
       forceUpdate(v => v + 1);
@@ -268,7 +314,7 @@ export default function Canvas2D({ points, breaklines, boundary, surface, proble
     if (activeTool === 'boundary') onBoundarySet([...s.drawingLine]);
     s.drawingLine = null;
     forceUpdate(v => v + 1);
-  }, [activeTool, onBreaklineAdd, onBoundarySet]);
+  }, [activeTool, points, onBreaklineAdd, onBoundarySet, onSelected]);
 
   const handleWheel = useCallback((e) => {
     e.preventDefault();

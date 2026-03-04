@@ -27,6 +27,13 @@ export default function App() {
   const [showTIN, setShowTIN] = useState(true);
   const [showLabels, setShowLabels] = useState(false);
   const [selected, setSelected] = useState(null);
+  const [clickedPoint, setClickedPoint] = useState(null);
+
+  const handlePointSelect = useCallback((data) => {
+    if (!data) { setSelected(null); setClickedPoint(null); return; }
+    if (data.type === 'select') { setSelected(data.point); setClickedPoint(data.point); }
+    if (data.type === 'info') { setSelected(data.point); setClickedPoint(data.point); }
+  }, []);
   const [mouseCoords, setMouseCoords] = useState({ e: 0, n: 0 });
   const [stats, setStats] = useState(null);
 
@@ -144,7 +151,7 @@ export default function App() {
               showLabels={showLabels}
               colorMode={colorMode}
               onMouseCoords={setMouseCoords}
-              onSelected={setSelected}
+              onSelected={handlePointSelect}
               onBreaklineAdd={(bl) => setProject(p => ({ ...p, breaklines: [...p.breaklines, bl] }))}
               onBoundarySet={(b) => setProject(p => ({ ...p, boundary: b }))}
             />
@@ -160,6 +167,7 @@ export default function App() {
         <CogoPanel
           points={project.points}
           lines={project.breaklines}
+          clickedPoint={clickedPoint}
           onAddPoint={(pt) => setProject(p => ({ ...p, points: [...p.points, pt], surface: null }))}
           onAddLine={(line) => setProject(p => ({ ...p, breaklines: [...p.breaklines, line] }))}
           onDeletePoint={(id) => setProject(p => ({ ...p, points: p.points.filter(pt => pt.id !== id), surface: null }))}
