@@ -45,8 +45,8 @@ export default function Toolbar({ projectName, view, onToggleView, onImportCSV, 
               {[
                 { key: 'csv', label: '📄 Export CSV (Points)' },
                 { key: 'dxf', label: '📐 Export DXF (Linework)' },
-                { key: 'ttm', label: '📡 Export TTM (Trimble)', disabled: !hasSurface },
-                { key: 'landxml', label: '🗺 Export LandXML', disabled: !hasSurface },
+                { key: 'landxml', label: '📡 Export LandXML (Trimble)', disabled: !hasSurface },
+                { key: 'ttm', label: '⚠ Export TTM (experimental)', disabled: !hasSurface },
               ].map(item => (
                 <div
                   key={item.key}
