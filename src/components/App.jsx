@@ -28,6 +28,7 @@ export default function App() {
   const [showLabels, setShowLabels] = useState(false);
   const [selected, setSelected] = useState(null);
   const [clickedPoint, setClickedPoint] = useState(null);
+  const [traversePreview, setTraversePreview] = useState(null);
 
   const handlePointSelect = useCallback((data) => {
     if (!data) { setSelected(null); setClickedPoint(null); return; }
@@ -152,6 +153,7 @@ export default function App() {
               colorMode={colorMode}
               onMouseCoords={setMouseCoords}
               onSelected={handlePointSelect}
+              traversePreview={traversePreview}
               onBreaklineAdd={(bl) => setProject(p => ({ ...p, breaklines: [...p.breaklines, { pts: bl, name: `Breakline ${p.breaklines.length + 1}` }] }))}
               onBoundarySet={(b) => setProject(p => ({ ...p, boundary: b }))}
             />
@@ -175,6 +177,7 @@ export default function App() {
           clickedPoint={clickedPoint}
           onAddPoint={(pt) => setProject(p => ({ ...p, points: [...p.points, pt], surface: null }))}
           onAddLine={(line, name) => setProject(p => ({ ...p, breaklines: [...p.breaklines, { pts: line, name: name || `Line ${p.breaklines.length + 1}` }] }))}
+          onTraversePreview={setTraversePreview}
           onDeletePoint={(id) => setProject(p => ({ ...p, points: p.points.filter(pt => pt.id !== id), surface: null }))}
           onDeleteLine={(idx) => setProject(p => ({ ...p, breaklines: p.breaklines.filter((_, i) => i !== idx) }))}
           onReplacePoints={(pts) => setProject(p => ({ ...p, points: pts, surface: null }))}

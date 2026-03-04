@@ -30,7 +30,7 @@ const section = { borderBottom: '1px solid #0f3460', paddingBottom: 12, marginBo
 const result = { background: '#0f3460', borderRadius: 6, padding: '8px 10px', fontSize: 12, marginTop: 8 };
 const resultRow = { display: 'flex', justifyContent: 'space-between', padding: '2px 0' };
 
-export default function CogoPanel({ points, lines, clickedPoint, onAddPoint, onAddLine, onDeletePoint, onDeleteLine, onReplacePoints }) {
+export default function CogoPanel({ points, lines, clickedPoint, onAddPoint, onAddLine, onDeletePoint, onDeleteLine, onReplacePoints, onTraversePreview }) {
   const [activeTab, setActiveTab] = useState('create');
   const [pointInfo, setPointInfo] = useState(null);
 
@@ -68,6 +68,22 @@ export default function CogoPanel({ points, lines, clickedPoint, onAddPoint, onA
   const [editState, setEditState] = useState({ id: '', easting: '', northing: '', elevation: '' });
 
   const findPt = id => points.find(p => p.id === id);
+
+  // Live traverse preview
+  useEffect(() => {
+    if (!onTraversePreview) return;
+    const { lastPt, refBearing, chain, turnAngle, distance, elevMode, elevValue } = traverseState;
+    if (!lastPt || refBearing === null || chain.length === 0) { onTraversePreview(null); return; }
+    const turn = parseFloat(turnAngle) || 0;
+    const dist = parseFloat(distance);
+    if (isNaN(dist) || dist <= 0) { onTraversePreview(null); return; }
+    let elevOption = { mode: 'fixed', value: 0 };
+    if (elevMode === 'fixed') elevOption = { mode: 'fixed', value: parseFloat(elevValue) || 0 };
+    else if (elevMode === 'slope') elevOption = { mode: 'slope', value: parseFloat(elevValue) || 0 };
+    else if (elevMode === 'manual') elevOption = { mode: 'manual', value: parseFloat(elevValue) || 0 };
+    const newPtData = pointAtAngleDistance(lastPt, refBearing, turn, dist, elevOption);
+    onTraversePreview({ lastPt, previewPt: { easting: newPtData.easting, northing: newPtData.northing, elevation: newPtData.elevation } });
+  }, [traverseState.turnAngle, traverseState.distance, traverseState.elevValue, traverseState.elevMode, traverseState.lastPt, traverseState.refBearing]);
 
   // ---- CREATE POINT ----
   const handleCreate = () => {

@@ -28,7 +28,7 @@ function slopeColor(slope) {
 function rgb(r, g, b) { return `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`; }
 function lerp(a, b, t) { return a + (b - a) * t; }
 
-export default function Canvas2D({ points, breaklines, boundary, surface, problems, activeTool, showTIN, showLabels, colorMode, onMouseCoords, onSelected, onBreaklineAdd, onBoundarySet }) {
+export default function Canvas2D({ points, breaklines, boundary, surface, problems, activeTool, showTIN, showLabels, colorMode, onMouseCoords, onSelected, onBreaklineAdd, onBoundarySet, traversePreview }) {
   const canvasRef = useRef(null);
   const stateRef = useRef({
     panX: 0, panY: 0, zoom: 1,
@@ -152,6 +152,33 @@ export default function Canvas2D({ points, breaklines, boundary, surface, proble
           ctx.fillText(name, mx + 4, my - 4);
         }
       });
+    }
+
+    // Draw traverse preview point
+    if (traversePreview && traversePreview.lastPt && traversePreview.previewPt) {
+      const [lx, ly] = toCanvas(traversePreview.lastPt.easting, traversePreview.lastPt.northing);
+      const [px2, py2] = toCanvas(traversePreview.previewPt.easting, traversePreview.previewPt.northing);
+      // Dashed line from last point to preview
+      ctx.setLineDash([6, 4]);
+      ctx.strokeStyle = '#00ff88';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(lx, ly);
+      ctx.lineTo(px2, py2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      // Preview point circle
+      ctx.beginPath();
+      ctx.arc(px2, py2, 7, 0, Math.PI * 2);
+      ctx.strokeStyle = '#00ff88';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(0,255,136,0.3)';
+      ctx.fill();
+      // Label with coords and elevation
+      ctx.fillStyle = '#00ff88';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.fillText(`E:${traversePreview.previewPt.easting.toFixed(1)} N:${traversePreview.previewPt.northing.toFixed(1)} Z:${traversePreview.previewPt.elevation.toFixed(1)}`, px2 + 10, py2 - 6);
     }
 
     // Draw active drawing line
