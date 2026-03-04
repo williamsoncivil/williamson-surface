@@ -1,6 +1,7 @@
 import React from 'react';
 
 export default function RightSidebar({ selected, stats, problems }) {
+  const pt = selected;
   return (
     <div style={{ width: 200, background: '#16213e', borderLeft: '1px solid #0f3460', padding: 12, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div>
@@ -36,10 +37,15 @@ export default function RightSidebar({ selected, stats, problems }) {
         </div>
       )}
 
-      {selected && (
+      {pt && (
         <div>
-          <div style={{ fontSize: 11, color: '#888', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Selected</div>
-          <pre style={{ fontSize: 11, color: '#e0e0e0', whiteSpace: 'pre-wrap' }}>{JSON.stringify(selected, null, 2)}</pre>
+          <div style={{ fontSize: 11, color: '#ffd700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>📍 Selected Point</div>
+          <StatRow label="Point ID" value={pt.id} />
+          <StatRow label="Easting" value={typeof pt.easting === 'number' ? pt.easting.toFixed(3) : pt.easting} />
+          <StatRow label="Northing" value={typeof pt.northing === 'number' ? pt.northing.toFixed(3) : pt.northing} />
+          <StatRow label="Elevation" value={typeof pt.elevation === 'number' ? pt.elevation.toFixed(3) : pt.elevation} />
+          {pt.description && <StatRow label="Desc" value={pt.description} />}
+          <div style={{ fontSize: 10, color: '#555', marginTop: 6 }}>Single click = select & fill COGO{'\n'}Double click = show info</div>
         </div>
       )}
     </div>

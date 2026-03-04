@@ -163,7 +163,7 @@ export default function App() {
             />
           )}
         </div>
-        <RightSidebar selected={selected} stats={stats} problems={project.problems} />
+        <RightSidebar selected={selected?.point || selected} stats={stats} problems={project.problems} />
         <CogoPanel
           points={project.points}
           lines={project.breaklines}

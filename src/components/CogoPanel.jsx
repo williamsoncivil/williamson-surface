@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { inverse, pointAtAngleDistance, polygonArea, offsetLine, closureCheck, formatBearing, formatSlope, nextPointId } from '../utils/cogo.js';
 
 const input = (extra = {}) => ({
